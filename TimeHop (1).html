@@ -1,0 +1,2085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TimeHop – Smart Time Travel Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/umd/lucide.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:linear-gradient(135deg,#e8f4ff 0%,#f5e6ff 50%,#ffe8f7 100%);
+    --card-bg:rgba(255,255,255,0.6);
+    --card-border:rgba(255,255,255,0.4);
+    --card-shadow:0 4px 20px rgba(147,197,253,0.3);
+    --card-gradient:linear-gradient(135deg,rgba(147,197,253,0.2) 0%,rgba(244,114,182,0.15) 100%);
+    --glow:0 0 30px rgba(244,114,182,0.5);
+    --btn-gradient:linear-gradient(to right,#60a5fa,#f472b6);
+    --blue:#60a5fa;
+    --pink:#f472b6;
+    --lavender:#c4b5fd;
+    --text:#1e293b;
+    --text2:#374151;
+    --text3:#6b7280;
+    --border-light:rgba(147,197,253,0.3);
+    --white50:rgba(255,255,255,0.5);
+    --white60:rgba(255,255,255,0.6);
+    --input-bg:rgba(255,255,255,0.5);
+    --radius:1rem;
+  }
+  body{font-family:'Inter',sans-serif;background:#ddd;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px}
+  #app{width:390px;height:844px;position:relative;overflow:hidden;border-radius:40px;box-shadow:0 30px 80px rgba(0,0,0,0.3);margin:auto}
+  .screen{position:absolute;inset:0;overflow:hidden;display:none}
+  .screen.active{display:block}
+  .bg{position:absolute;inset:0;background:var(--bg)}
+  .content{position:relative;height:100%;display:flex;flex-direction:column}
+  .content.pb20{padding-bottom:80px}
+  .scroll-area{overflow-y:auto;flex:1}
+  .p6{padding:24px}
+  .px6{padding-left:24px;padding-right:24px}
+
+  /* Glass Card */
+  .card{background:var(--card-bg);backdrop-filter:blur(16px);border:1px solid var(--card-border);border-radius:var(--radius);padding:16px;box-shadow:var(--card-shadow);background-image:var(--card-gradient)}
+  .card.glow{box-shadow:var(--card-shadow),var(--glow)}
+  .mb3{margin-bottom:12px}
+  .mb4{margin-bottom:16px}
+  .mb6{margin-bottom:24px}
+  .mt3{margin-top:12px}
+  .mt4{margin-top:16px}
+  .mt6{margin-top:24px}
+  .space-y-3>*+*{margin-top:12px}
+  .space-y-4>*+*{margin-top:16px}
+  .space-y-5>*+*{margin-top:20px}
+
+  /* Typography */
+  h1.xl{font-size:3rem;font-weight:700;color:var(--text)}
+  h1.lg{font-size:2.25rem;font-weight:700;color:var(--text)}
+  h1.md{font-size:1.875rem;font-weight:700;color:var(--text)}
+  h1.sm{font-size:1.5rem;font-weight:700;color:var(--text)}
+  .subtitle{color:var(--text3);font-size:.875rem}
+  .subtitle2{color:var(--text2);font-size:.875rem}
+  .label{color:var(--text2);font-size:.9rem}
+  .micro{font-size:.65rem;color:var(--text3)}
+  .xs{font-size:.75rem;color:var(--text2)}
+  .xs.dark{color:var(--text)}
+  .bold{font-weight:700}
+  .semi{font-weight:600}
+
+  /* Buttons */
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:1rem;font-weight:600;font-size:1rem;border:none;cursor:pointer;transition:transform .15s,opacity .15s;font-family:inherit}
+  .btn:active{transform:scale(.97)}
+  .btn.primary{background:var(--btn-gradient);color:#fff;box-shadow:0 8px 20px rgba(244,114,182,0.4)}
+  .btn.primary:disabled{opacity:.5;cursor:not-allowed}
+  .btn.secondary{background:var(--white60);color:var(--text);border:1px solid var(--border-light)}
+  .btn.danger{background:linear-gradient(to right,#f472b6,#ef4444);color:#fff;box-shadow:0 8px 20px rgba(244,114,182,0.4)}
+  .btn.danger-outline{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+  .btn.pink-outline{background:rgba(244,114,182,.1);color:#db2777;border:1px solid rgba(244,114,182,.5)}
+  .btn.sm{padding:8px 12px;font-size:.75rem;width:auto;border-radius:.75rem}
+  .btn.xs{padding:6px 10px;font-size:.65rem;width:auto;border-radius:.625rem}
+
+  /* Back button */
+  .back-btn{width:36px;height:36px;border-radius:50%;background:var(--white60);backdrop-filter:blur(8px);border:1px solid var(--border-light);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s}
+  .back-btn:hover{background:rgba(255,255,255,.8)}
+
+  /* Header */
+  .header{padding:24px 24px 0}
+  .header-row{display:flex;align-items:center;gap:12px;padding-top:32px}
+
+  /* Bottom Nav */
+  #bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:390px;z-index:100;display:none}
+  #bottom-nav.show{display:block}
+  .nav-bar{display:flex;align-items:center;justify-content:space-around;padding:12px 16px;backdrop-filter:blur(24px);background:rgba(255,255,255,.8);border-top:1px solid var(--border-light);background-image:linear-gradient(to top,rgba(147,197,253,.3),rgba(244,114,182,.2))}
+  .nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:#6b7280;transition:color .15s,transform .15s;font-family:inherit}
+  .nav-btn span{font-size:10px}
+  .nav-btn.active{color:var(--pink);transform:scale(1.1)}
+  .nav-btn.active.blue{color:var(--blue)}
+  .nav-btn.active.lav{color:var(--lavender)}
+
+  /* Inputs */
+  .input{width:100%;padding:10px 14px;border-radius:.75rem;background:var(--input-bg);border:1px solid rgba(147,197,253,.4);color:var(--text);font-size:.9rem;font-family:inherit;outline:none;transition:box-shadow .15s}
+  .input:focus{box-shadow:0 0 0 2px rgba(244,114,182,.4)}
+  .input-icon{position:relative}
+  .input-icon .input{padding-left:42px}
+  .input-icon .icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#6b7280;width:18px;height:18px}
+  textarea.input{resize:none}
+  select.input{cursor:pointer}
+
+  /* Tags/badges */
+  .tag{display:inline-flex;padding:4px 10px;border-radius:.5rem;font-size:.75rem;font-weight:600}
+  .tag.blue{background:rgba(96,165,250,.2);color:var(--blue)}
+  .tag.pink{background:rgba(244,114,182,.2);color:var(--pink)}
+  .tag.lav{background:rgba(196,181,253,.2);color:#8b5cf6}
+  .tag.yellow{background:rgba(250,204,21,.2);color:#d97706}
+
+  /* Gradient circle */
+  .grad-circle{border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--pink));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .grad-sq{border-radius:.75rem;background:linear-gradient(135deg,rgba(96,165,250,.3),rgba(244,114,182,.3));display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+  /* Toggle */
+  .toggle{position:relative;width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;transition:background .2s;flex-shrink:0}
+  .toggle.on{background:var(--btn-gradient)}
+  .toggle.off{background:#d1d5db}
+  .toggle-thumb{position:absolute;top:4px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s}
+  .toggle.on .toggle-thumb{left:24px}
+  .toggle.off .toggle-thumb{left:4px}
+
+  /* Progress bar */
+  .progress{height:8px;background:var(--white50);border-radius:4px;overflow:hidden}
+  .progress-fill{height:100%;border-radius:4px;background:var(--btn-gradient);transition:width 1s ease}
+
+  /* Grid */
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+
+  /* Row */
+  .row{display:flex;align-items:center;gap:12px}
+  .row.between{justify-content:space-between}
+  .row.center{justify-content:center}
+  .col{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+
+  /* Portal Animation */
+  .portal-wrap{position:relative;display:flex;align-items:center;justify-content:center}
+  .portal-ring{position:absolute;border-radius:50%;border:2px solid;animation:portalSpin 3s linear infinite}
+  .portal-ring:nth-child(1){width:100%;height:100%;border-color:var(--pink);opacity:.6;animation-duration:3s}
+  .portal-ring:nth-child(2){width:85%;height:85%;border-color:var(--blue);opacity:.5;animation-duration:4s;animation-direction:reverse}
+  .portal-ring:nth-child(3){width:70%;height:70%;border-color:var(--lavender);opacity:.4;animation-duration:2.5s}
+  .portal-core{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,#f472b6,#60a5fa,#c4b5fd);box-shadow:0 0 40px rgba(244,114,182,.9),0 0 80px rgba(96,165,250,.6);animation:portalPulse 4s ease-in-out infinite}
+  @keyframes portalSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  @keyframes portalPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+  .portal-particle{position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 10px rgba(255,255,255,.8);animation:particle 2s ease-in-out infinite}
+  @keyframes particle{0%,100%{opacity:0;transform:translate(-50%,-50%) scale(0)}50%{opacity:1;transform:translate(var(--tx),var(--ty)) scale(1)}}
+
+  /* Radar */
+  .radar-wrap{position:relative;width:100%;aspect-ratio:1;max-width:260px;margin:auto;background:linear-gradient(135deg,#e8f4ff,#f5e6ff);border-radius:50%;padding:20px}
+  .radar-ring{position:absolute;top:50%;left:50%;border-radius:50%;border:1px solid rgba(147,197,253,.2);transform:translate(-50%,-50%)}
+  .radar-center{position:absolute;top:50%;left:50%;width:12px;height:12px;background:var(--pink);border-radius:50%;box-shadow:0 0 10px rgba(244,114,182,.5);transform:translate(-50%,-50%)}
+  .radar-line{position:absolute;top:50%;left:50%;width:50%;height:2px;transform-origin:left center;background:linear-gradient(to right,rgba(236,72,153,1),transparent);box-shadow:0 0 10px rgba(236,72,153,.5);animation:radarSpin 2s linear infinite}
+  @keyframes radarSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .radar-dot{position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%);animation:dotPulse 1.5s ease-in-out infinite}
+  @keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 currentColor}50%{box-shadow:0 0 0 6px transparent}}
+
+  /* Animations */
+  @keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeInDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes scaleIn{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+  @keyframes shake{0%,100%{transform:rotate(0)}10%,30%,50%,70%,90%{transform:rotate(-10deg)}20%,40%,60%,80%{transform:rotate(10deg)}}
+  .anim-fadeup{animation:fadeInUp .6s ease forwards}
+  .anim-fadedown{animation:fadeInDown .6s ease forwards}
+  .anim-fade{animation:fadeIn .6s ease forwards}
+  .anim-scale{animation:scaleIn .5s ease forwards}
+  .anim-d1{animation-delay:.1s;opacity:0}
+  .anim-d2{animation-delay:.2s;opacity:0}
+  .anim-d3{animation-delay:.3s;opacity:0}
+  .anim-d4{animation-delay:.4s;opacity:0}
+  .anim-d5{animation-delay:.5s;opacity:0}
+  .anim-d6{animation-delay:.6s;opacity:0}
+  @keyframes blink{0%,100%{opacity:.5}50%{opacity:1}}
+  .blink{animation:blink 1.5s ease-in-out infinite}
+  @keyframes pulse-scale{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+  .pulse{animation:pulse-scale 2s ease-in-out infinite}
+
+  /* Gauge */
+  .gauge-svg circle.gauge-fill{transition:stroke-dashoffset 1s ease}
+
+  /* Map grid */
+  .map-grid{width:100%;height:200px;background:linear-gradient(135deg,rgba(96,165,250,.2),rgba(244,114,182,.2));border-radius:.75rem;overflow:hidden;position:relative}
+  .map-lines{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(6,1fr);position:absolute;inset:0}
+  .map-cell{border:1px solid rgba(147,197,253,.3)}
+  .map-pin{position:absolute;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%);cursor:pointer;transition:transform .15s;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .map-pin:hover{transform:translate(-50%,-50%) scale(1.2)}
+  .map-pin.selected{background:var(--pink);box-shadow:0 0 15px rgba(244,114,182,.6)}
+  .map-pin.unselected{background:var(--blue)}
+
+  /* Message bubbles */
+  .bubble-user{background:var(--btn-gradient);color:#fff;border-radius:1rem 1rem .25rem 1rem;max-width:80%;padding:12px 16px;align-self:flex-end}
+  .bubble-ai{background:rgba(255,255,255,.7);backdrop-filter:blur(8px);color:var(--text);border:1px solid rgba(147,197,253,.4);border-radius:1rem 1rem 1rem .25rem;max-width:80%;padding:12px 16px;align-self:flex-start}
+  .messages{display:flex;flex-direction:column;gap:12px}
+
+  /* Photo grid */
+  .photo-card{aspect-ratio:1;border-radius:.75rem;overflow:hidden;border:1px solid rgba(147,197,253,.4)}
+  .photo-card img{width:100%;height:100%;object-fit:cover}
+
+  /* Timeline item */
+  .history-item{display:flex;align-items:flex-start;gap:12px;margin-bottom:8px}
+  .history-badge{width:40px;height:40px;flex-shrink:0}
+
+  /* Pulse dot */
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .dot.online{background:var(--blue)}
+  .dot.offline{background:#9ca3af}
+
+  /* Radio */
+  .radio{width:20px;height:20px;border-radius:50%;border:2px solid #9ca3af;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:border-color .15s}
+  .radio.checked{border-color:var(--pink);background:var(--pink)}
+  .radio-dot{width:8px;height:8px;background:#fff;border-radius:50%}
+
+  /* Divider */
+  .divider{height:1px;background:rgba(147,197,253,.3);margin:12px 0}
+
+  /* Star fill */
+  .star-fill{fill:#ec4899;color:#ec4899}
+
+  /* Hidden */
+  .hidden{display:none!important}
+
+  /* Loading bar anim */
+  @keyframes loadProgress{from{width:0}to{width:100%}}
+  .loading-bar{height:12px;border-radius:6px;background:var(--white50);overflow:hidden;position:relative}
+  .loading-fill{height:100%;border-radius:6px;background:var(--btn-gradient);box-shadow:0 0 20px rgba(244,114,182,.6);width:0}
+
+  /* Achievement */
+  .achievement.locked{opacity:.4}
+
+  /* Scrollbar hide */
+  .scroll-area::-webkit-scrollbar{display:none}
+
+  /* Pulse btn */
+  @keyframes btnPulse{0%,100%{opacity:1}50%{opacity:.7}}
+  .btn-pulse{animation:btnPulse 1.5s ease-in-out infinite}
+
+  /* Password req */
+  .req.met{color:var(--blue)}
+  .req{color:var(--text3)}
+
+  /* Selected card ring */
+  .ring-pink{outline:2px solid var(--pink);outline-offset:-1px}
+
+  /* Custom duration display */
+  .duration-display{text-align:center}
+
+  /* Warn pulsing icon */
+  .warn-icon{animation:pulse-scale 2s ease-in-out infinite}
+
+  /* Section title */
+  .section-title{font-size:.875rem;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+  /* Misc */
+  .overflow-hidden{overflow:hidden}
+  .text-center{text-align:center}
+  .truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .flex-1{flex:1;min-width:0}
+  .w-full{width:100%}
+  .relative{position:relative}
+  .absolute{position:absolute}
+
+  /* Error card outline */
+  .card.border-pink{border:1px solid rgba(244,114,182,.4)}
+  .card.border-red{border:1px solid rgba(239,68,68,.3)}
+
+  /* Stats mini card */
+  .stat-card{padding:12px;text-align:center}
+
+  /* Pending badge */
+  .badge-pending{font-size:.7rem;padding:4px 8px;border-radius:999px;background:rgba(250,204,21,.2);color:#d97706;font-weight:600}
+</style>
+</head>
+<body>
+
+<!-- ===== BOTTOM NAV ===== -->
+<div id="bottom-nav">
+  <div class="nav-bar">
+    <button class="nav-btn" id="nav-home" onclick="go('home')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-btn" id="nav-explore" onclick="go('best-time')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+      <span>Explore</span>
+    </button>
+    <button class="nav-btn" id="nav-history" onclick="go('history')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>History</span>
+    </button>
+    <button class="nav-btn" id="nav-ai" onclick="go('ai')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+      <span>AI</span>
+    </button>
+    <button class="nav-btn" id="nav-profile" onclick="go('profile')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </button>
+  </div>
+</div>
+
+<!-- ===== APP WRAPPER ===== -->
+<div id="app">
+
+<!-- ============================
+     SPLASH SCREEN
+============================= -->
+<div class="screen active" id="screen-splash">
+  <div class="bg"></div>
+  <div class="content" style="align-items:center;justify-content:center;gap:32px">
+    <!-- Portal -->
+    <div class="portal-wrap" style="width:250px;height:250px">
+      <div class="portal-ring"></div>
+      <div class="portal-ring"></div>
+      <div class="portal-ring"></div>
+      <div class="portal-core"></div>
+      <div class="portal-particle" style="--tx:-80px;--ty:0px;top:50%;left:50%;animation-delay:0s"></div>
+      <div class="portal-particle" style="--tx:-57px;--ty:-57px;top:50%;left:50%;animation-delay:.25s"></div>
+      <div class="portal-particle" style="--tx:0;--ty:-80px;top:50%;left:50%;animation-delay:.5s"></div>
+      <div class="portal-particle" style="--tx:57px;--ty:-57px;top:50%;left:50%;animation-delay:.75s"></div>
+      <div class="portal-particle" style="--tx:80px;--ty:0;top:50%;left:50%;animation-delay:1s"></div>
+      <div class="portal-particle" style="--tx:57px;--ty:57px;top:50%;left:50%;animation-delay:1.25s"></div>
+      <div class="portal-particle" style="--tx:0;--ty:80px;top:50%;left:50%;animation-delay:1.5s"></div>
+      <div class="portal-particle" style="--tx:-57px;--ty:57px;top:50%;left:50%;animation-delay:1.75s"></div>
+    </div>
+    <div class="text-center anim-fadeup anim-d2">
+      <h1 style="font-size:3rem;font-weight:700;color:var(--text);margin-bottom:8px">TimeHop</h1>
+      <p class="label">Smart Time Travel Assistant</p>
+    </div>
+    <div class="absolute" style="bottom:48px">
+      <div class="blink" style="width:48px;height:4px;background:linear-gradient(to right,var(--blue),var(--pink),var(--lavender));border-radius:2px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     BEGIN JOURNEY
+============================= -->
+<div class="screen" id="screen-begin">
+  <div class="bg"></div>
+  <div class="content" style="align-items:center;justify-content:space-between;padding:32px 32px 48px">
+    <div class="text-center anim-fadedown">
+      <h1 class="lg" style="margin-bottom:16px">Begin Your Time Journey</h1>
+      <p class="label" style="padding:0 16px">Plan your perfect time travel experience with AI assistance</p>
+    </div>
+    <div class="portal-wrap anim-fade anim-d3" style="width:280px;height:280px">
+      <div class="portal-ring"></div><div class="portal-ring"></div><div class="portal-ring"></div>
+      <div class="portal-core"></div>
+      <div class="portal-particle" style="--tx:-80px;--ty:0;top:50%;left:50%;animation-delay:0s"></div>
+      <div class="portal-particle" style="--tx:80px;--ty:0;top:50%;left:50%;animation-delay:1s"></div>
+      <div class="portal-particle" style="--tx:0;--ty:-80px;top:50%;left:50%;animation-delay:.5s"></div>
+      <div class="portal-particle" style="--tx:0;--ty:80px;top:50%;left:50%;animation-delay:1.5s"></div>
+    </div>
+    <div class="w-full anim-fadeup anim-d5">
+      <div class="card mb4">
+        <p class="xs text-center">Explore historical events, plan your timeline, and travel safely through time</p>
+      </div>
+      <button class="btn primary" onclick="go('login')" style="font-size:1.1rem">Start Journey</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     LOGIN / SIGNUP
+============================= -->
+<div class="screen" id="screen-login">
+  <div class="bg"></div>
+  <div class="content" style="justify-content:center;padding:32px">
+    <div class="absolute" style="top:32px;left:24px"><button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button></div>
+    <div class="anim-fadedown mb6">
+      <h1 class="sm" style="margin-bottom:4px">Welcome Back</h1>
+      <p class="subtitle">Sign in to continue your journey</p>
+    </div>
+    <div class="anim-fadeup anim-d2 space-y-5">
+      <div class="card">
+        <div class="space-y-4">
+          <div>
+            <label class="xs dark semi" style="display:block;margin-bottom:8px">Email</label>
+            <div class="input-icon">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <input class="input" id="login-email" type="email" placeholder="your@email.com" oninput="checkLogin()">
+            </div>
+          </div>
+          <div>
+            <label class="xs dark semi" style="display:block;margin-bottom:8px">Password</label>
+            <div class="input-icon" style="position:relative">
+              <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <input class="input" id="login-pw" type="password" placeholder="Enter password" oninput="checkLogin()" style="padding-right:44px">
+              <button onclick="togglePw()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280" id="eye-btn">
+                <svg id="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div id="pw-error" class="hidden" style="color:var(--pink);font-size:.75rem;margin-top:6px"></div>
+          </div>
+          <div>
+            <p class="xs dark semi" style="margin-bottom:6px">Password requirements:</p>
+            <div class="grid-2" style="gap:4px">
+              <span class="xs req" id="req-len">✓ 8+ characters</span>
+              <span class="xs req" id="req-upper">✓ 1 uppercase</span>
+              <span class="xs req" id="req-num">✓ 1 number</span>
+              <span class="xs req" id="req-special">✓ 1 special</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="space-y-3">
+        <button class="btn primary" id="login-btn" onclick="doLogin()" disabled>Login</button>
+        <button class="btn secondary" onclick="doLogin()">Sign Up</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     HOME DASHBOARD
+============================= -->
+<div class="screen" id="screen-home">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="p6" style="padding-bottom:16px">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1">
+          <h1 class="sm" style="margin-bottom:2px">Welcome Back</h1>
+          <p class="subtitle">Ready for your next adventure?</p>
+        </div>
+        <div class="row" style="gap:8px">
+          <button onclick="go('profile')" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,rgba(96,165,250,.3),rgba(244,114,182,.3));border:1px solid rgba(244,114,182,.4);display:flex;align-items:center;justify-content:center;cursor:pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </button>
+          <button onclick="go('settings')" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,rgba(96,165,250,.3),rgba(244,114,182,.3));border:1px solid rgba(96,165,250,.4);display:flex;align-items:center;justify-content:center;cursor:pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <!-- Stability -->
+      <div class="card mb4">
+        <div class="row between mb3">
+          <span class="xs dark semi">Timeline Stability</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        </div>
+        <div class="progress mb3"><div class="progress-fill" style="width:95%" id="stability-bar"></div></div>
+        <p class="xs">95% Stable</p>
+      </div>
+    </div>
+    <div class="px6" style="padding-bottom:16px">
+      <div class="card glow">
+        <div class="text-center">
+          <svg style="margin:0 auto 8px" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+          <h3 class="xs dark semi" style="margin-bottom:12px">Quick Time Travel</h3>
+          <button class="btn primary" onclick="go('best-time')">Start New Journey</button>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-area px6">
+      <h2 style="font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:12px">AI Travel Suggestions</h2>
+      <div class="space-y-3 mb6">
+        <div class="card">
+          <div class="row">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" style="flex-shrink:0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div class="flex-1 truncate">
+              <p class="xs dark semi truncate">Paris – 1889</p>
+              <p class="micro truncate">Eiffel Tower Opening</p>
+            </div>
+            <button class="btn primary sm" onclick="go('destination')">Select</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" style="flex-shrink:0"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div class="flex-1 truncate">
+              <p class="xs dark semi truncate">Rome – 80 AD</p>
+              <p class="micro truncate">Colosseum Opening</p>
+            </div>
+            <button class="btn primary sm" onclick="go('destination')">Select</button>
+          </div>
+        </div>
+      </div>
+      <h2 style="font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:12px">Recent Travels</h2>
+      <div class="card mb4">
+        <div class="row">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--lavender)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div>
+            <p class="xs dark semi">Paris – 1889</p>
+            <p class="micro">Eiffel Tower Opening</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     BEST TIME TO VISIT
+============================= -->
+<div class="screen" id="screen-best-time">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1">
+          <h1 class="sm">Best Time to Visit</h1>
+          <p class="subtitle">Curated destinations for you</p>
+        </div>
+      </div>
+      <div class="space-y-3 mb4">
+        <div class="card glow anim-fadeup">
+          <div class="row mb3">
+            <div class="grad-sq" style="width:48px;height:48px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="flex-1">
+              <h3 style="font-size:1.1rem;font-weight:700;color:var(--text)">Paris</h3>
+              <p style="color:var(--blue);font-weight:600;font-size:.875rem">1889</p>
+            </div>
+          </div>
+          <p class="xs mb3">Eiffel Tower Opening</p>
+          <button class="btn primary" onclick="go('destination')" style="font-size:.875rem">Select Destination <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+        </div>
+        <div class="card glow anim-fadeup anim-d1">
+          <div class="row mb3">
+            <div class="grad-sq" style="width:48px;height:48px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="flex-1">
+              <h3 style="font-size:1.1rem;font-weight:700;color:var(--text)">Rome</h3>
+              <p style="color:var(--blue);font-weight:600;font-size:.875rem">80 AD</p>
+            </div>
+          </div>
+          <p class="xs mb3">Colosseum Inauguration</p>
+          <button class="btn primary" onclick="go('destination')" style="font-size:.875rem">Select Destination <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+        </div>
+        <div class="card glow anim-fadeup anim-d2">
+          <div class="row mb3">
+            <div class="grad-sq" style="width:48px;height:48px"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="flex-1">
+              <h3 style="font-size:1.1rem;font-weight:700;color:var(--text)">USA</h3>
+              <p style="color:var(--blue);font-weight:600;font-size:.875rem">1969</p>
+            </div>
+          </div>
+          <p class="xs mb3">Moon Landing Broadcast</p>
+          <button class="btn primary" onclick="go('destination')" style="font-size:.875rem">Select Destination <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+        </div>
+      </div>
+      <button class="btn secondary anim-fadeup anim-d4" onclick="go('destination')">Enter Location Manually</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     DESTINATION SELECTION
+============================= -->
+<div class="screen" id="screen-destination">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="sm">Destination</h1><p class="subtitle">Choose where to travel</p></div>
+      </div>
+      <div class="card mb3">
+        <div class="input-icon">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input class="input" type="text" placeholder="Search location...">
+        </div>
+      </div>
+      <div class="row mb3" style="gap:8px">
+        <button class="btn sm" id="filter-popular" onclick="setFilter('popular')" style="flex:1;background:var(--btn-gradient);color:#fff">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Popular
+        </button>
+        <button class="btn sm" id="filter-historical" onclick="setFilter('historical')" style="flex:1;background:var(--white50);color:var(--text);border:1px solid var(--border-light)">Historical</button>
+        <button class="btn sm" id="filter-favorites" onclick="setFilter('favorites')" style="flex:1;background:var(--white50);color:var(--text);border:1px solid var(--border-light)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Favorites
+        </button>
+      </div>
+      <div class="card glow mb3">
+        <div class="map-grid">
+          <div class="map-lines" id="map-grid-lines"></div>
+          <div id="map-pins"></div>
+        </div>
+      </div>
+      <div id="selected-dest-card" class="card mb3 hidden">
+        <div class="text-center">
+          <svg style="margin:0 auto 4px" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <p class="xs dark semi" id="selected-dest-name"></p>
+        </div>
+      </div>
+      <button class="btn primary" onclick="confirmDest()">Confirm Destination</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     TIME SELECTION
+============================= -->
+<div class="screen" id="screen-time">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="sm">Time Selection</h1><p class="subtitle">Choose when to travel</p></div>
+      </div>
+      <div class="card text-center mb3">
+        <p class="micro">Current Timeline</p>
+        <p style="font-size:1.5rem;font-weight:700;color:var(--text);margin-top:4px">2026</p>
+      </div>
+      <div class="card text-center mb3">
+        <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:.5rem;background:linear-gradient(to right,rgba(96,165,250,.3),rgba(244,114,182,.3));border:1px solid rgba(244,114,182,.4)">
+          <span class="xs dark semi" id="time-direction">← Past Travel</span>
+        </div>
+      </div>
+      <div class="card glow mb3">
+        <div class="row mb4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+          <span class="xs dark semi">Select Date &amp; Time</span>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <label class="micro" style="display:block;margin-bottom:4px">Year</label>
+            <input class="input" id="t-year" type="number" value="1889" oninput="updateTimeDirection()" style="text-align:center;font-size:1.25rem;font-weight:700">
+          </div>
+          <div class="grid-2">
+            <div>
+              <label class="micro" style="display:block;margin-bottom:4px">Month</label>
+              <select class="input" id="t-month" oninput="markTimeInteracted()" style="text-align:center;font-weight:600">
+                <option value="1">Jan</option><option value="2">Feb</option><option value="3">Mar</option><option value="4">Apr</option>
+                <option value="5">May</option><option value="6">Jun</option><option value="7" selected>Jul</option><option value="8">Aug</option>
+                <option value="9">Sep</option><option value="10">Oct</option><option value="11">Nov</option><option value="12">Dec</option>
+              </select>
+            </div>
+            <div>
+              <label class="micro" style="display:block;margin-bottom:4px">Day</label>
+              <input class="input" id="t-day" type="number" value="14" min="1" max="31" oninput="markTimeInteracted()" style="text-align:center;font-weight:600">
+            </div>
+          </div>
+          <div class="grid-2">
+            <div>
+              <label class="micro" style="display:block;margin-bottom:4px">Hour</label>
+              <input class="input" id="t-hour" type="number" value="10" min="0" max="23" oninput="markTimeInteracted()" style="text-align:center;font-weight:600">
+            </div>
+            <div>
+              <label class="micro" style="display:block;margin-bottom:4px">Minute</label>
+              <input class="input" id="t-min" type="number" value="0" min="0" max="59" oninput="markTimeInteracted()" style="text-align:center;font-weight:600">
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="text-center">
+            <p class="micro">Selected Date &amp; Time</p>
+            <p style="font-size:1.1rem;font-weight:700;color:var(--text);margin-top:4px" id="time-display">Jul 14, 1889 – 10:00</p>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary" onclick="confirmTime()">Confirm Time</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     DURATION SELECTION
+============================= -->
+<div class="screen" id="screen-duration">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="sm">Duration</h1><p class="subtitle">How long will you stay?</p></div>
+      </div>
+      <div class="card glow mb3">
+        <div class="row mb4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span class="xs dark semi">Quick Select</span>
+        </div>
+        <div class="grid-3">
+          <button class="btn primary sm" id="dur-1h" onclick="setDuration('1 hour')">1 hour</button>
+          <button class="btn secondary sm" id="dur-6h" onclick="setDuration('6 hours')">6 hours</button>
+          <button class="btn secondary sm" id="dur-1d" onclick="setDuration('1 day')">1 day</button>
+        </div>
+      </div>
+      <div class="card mb3">
+        <p class="xs dark semi" style="margin-bottom:16px">Custom Duration</p>
+        <div class="grid-2">
+          <div>
+            <label class="micro" style="display:block;margin-bottom:8px">Value</label>
+            <input class="input" id="dur-custom-val" type="number" placeholder="0" min="1" oninput="updateCustomDuration()" style="text-align:center;font-weight:600">
+          </div>
+          <div>
+            <label class="micro" style="display:block;margin-bottom:8px">Unit</label>
+            <select class="input" id="dur-custom-unit" onchange="updateCustomDuration()" style="font-weight:600">
+              <option>Minutes</option><option selected>Hours</option><option>Days</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card mb3" id="dur-display-card">
+        <div class="text-center">
+          <p class="micro">Selected Duration</p>
+          <p style="font-size:1.5rem;font-weight:700;color:var(--text);margin-top:4px" id="dur-display">6 hours</p>
+        </div>
+      </div>
+      <button class="btn primary" onclick="go('radar')">Confirm Duration</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     HISTORICAL EVENT RADAR
+============================= -->
+<div class="screen" id="screen-radar">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="md" style="margin-bottom:4px">Event Radar</h1><p class="label">July 14, 1889 events</p></div>
+      </div>
+      <div class="card glow mb3">
+        <div class="row mb3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M4.93 19.07A10 10 0 1 1 19.07 4.93 10 10 0 0 1 4.93 19.07z"/><path d="M8.28 15.72A6 6 0 1 1 15.72 8.28 6 6 0 0 1 8.28 15.72z"/><path d="M11.29 12.71A2 2 0 1 1 12.71 11.29 2 2 0 0 1 11.29 12.71z"/></svg>
+          <span class="xs dark semi">Scanning Events</span>
+        </div>
+        <div class="radar-wrap">
+          <div class="radar-ring" style="width:33%;height:33%"></div>
+          <div class="radar-ring" style="width:66%;height:66%"></div>
+          <div class="radar-ring" style="width:99%;height:99%"></div>
+          <div class="radar-center"></div>
+          <div class="radar-line"></div>
+          <!-- Dots -->
+          <div class="radar-dot" style="background:var(--pink);left:calc(50% + 35px);top:calc(50% - 35px)"></div>
+          <div class="radar-dot" style="background:var(--blue);left:calc(50% - 50px);top:calc(50% + 20px)"></div>
+          <div class="radar-dot" style="background:var(--lavender);left:calc(50% + 20px);top:calc(50% + 55px)"></div>
+        </div>
+      </div>
+      <p class="xs dark semi mb3">Detected Events</p>
+      <div class="space-y-3 mb3">
+        <div class="card">
+          <div class="row">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" style="flex-shrink:0"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <div class="flex-1"><p class="xs dark semi">Eiffel Tower Opening</p><p class="micro">20km away</p></div>
+            <span class="tag pink">HIGH</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" style="flex-shrink:0"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <div class="flex-1"><p class="xs dark semi">Paris World Fair</p><p class="micro">50km away</p></div>
+            <span class="tag blue">MEDIUM</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" style="flex-shrink:0"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+            <div class="flex-1"><p class="xs dark semi">Tech Showcase</p><p class="micro">80km away</p></div>
+            <span class="tag lav">LOW</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary" onclick="go('era-guide')">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     ERA ADAPTATION GUIDE
+============================= -->
+<div class="screen" id="screen-era-guide">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="md" style="margin-bottom:4px">Era Guide</h1><p class="label">Paris, 1889 guidelines</p></div>
+      </div>
+      <div class="card glow mb3">
+        <div class="row mb3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="xs dark semi">Clothing &amp; Attire</span>
+        </div>
+        <div class="space-y-3">
+          <div>
+            <p class="xs dark semi mb3">Men</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <span class="tag blue">Top hats</span>
+              <span class="tag blue">Formal coats</span>
+              <span class="tag blue">Waistcoats</span>
+            </div>
+          </div>
+          <div>
+            <p class="xs dark semi mb3">Women</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <span class="tag pink">Victorian dresses</span>
+              <span class="tag pink">Hats &amp; gloves</span>
+              <span class="tag pink">Parasols</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card mb3">
+        <div class="row mb3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span class="xs dark semi">Social Etiquette</span>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:6px">
+          <li class="xs">• Formal greetings with slight bow</li>
+          <li class="xs">• Use proper titles (Mr., Mrs.)</li>
+          <li class="xs">• Maintain proper posture</li>
+          <li class="xs">• Men remove hats indoors</li>
+        </ul>
+      </div>
+      <div class="card mb3">
+        <div class="row mb3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+          <span class="xs dark semi">Language Tips</span>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:6px">
+          <li class="xs">• French is primary language</li>
+          <li class="xs">• Formal speech patterns</li>
+          <li class="xs">• Avoid modern slang</li>
+          <li class="xs">• Learn basic French phrases</li>
+        </ul>
+      </div>
+      <button class="btn primary" onclick="go('risk')">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     TRAVEL RISK ASSESSMENT
+============================= -->
+<div class="screen" id="screen-risk">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="md" style="margin-bottom:4px">Risk Assessment</h1><p class="label">Travel safety analysis</p></div>
+      </div>
+      <div class="card glow mb3">
+        <div class="row mb4">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="xs dark semi">Overall Risk Level</span>
+        </div>
+        <div style="position:relative;width:160px;height:160px;margin:0 auto 16px">
+          <svg width="160" height="160" viewBox="0 0 100 100" style="transform:rotate(-90deg)">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="8"/>
+            <circle cx="50" cy="50" r="40" fill="none" stroke="var(--blue)" stroke-width="8" stroke-linecap="round"
+              stroke-dasharray="251.2" stroke-dashoffset="213.52" id="risk-circle"/>
+          </svg>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <span style="font-size:1.875rem;font-weight:700;color:var(--text)">15%</span>
+            <span class="micro">Risk</span>
+          </div>
+        </div>
+        <div class="text-center">
+          <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:999px;background:rgba(96,165,250,.2);border:1px solid rgba(147,197,253,.3)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span class="xs semi" style="color:var(--blue);text-transform:uppercase">Low Risk</span>
+          </div>
+          <p class="micro mt3">Safe to observe public events</p>
+        </div>
+      </div>
+      <p class="xs dark semi mb3">Risk Factors</p>
+      <div class="space-y-3 mb3">
+        <div class="card"><div class="row between">
+          <div class="row"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div><p class="xs dark semi">Timeline Stability</p><p class="micro">High</p></div></div><span class="tag blue" style="font-size:.625rem">SAFE</span>
+        </div></div>
+        <div class="card"><div class="row between">
+          <div class="row"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div><p class="xs dark semi">Historical Conflicts</p><p class="micro">None</p></div></div><span class="tag blue" style="font-size:.625rem">SAFE</span>
+        </div></div>
+        <div class="card"><div class="row between">
+          <div class="row"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg><div><p class="xs dark semi">Disease Risk</p><p class="micro">Minor</p></div></div><span class="tag pink" style="font-size:.625rem">CAUTION</span>
+        </div></div>
+        <div class="card"><div class="row between">
+          <div class="row"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div><p class="xs dark semi">Public Event Safety</p><p class="micro">Secure</p></div></div><span class="tag blue" style="font-size:.625rem">SAFE</span>
+        </div></div>
+      </div>
+      <button class="btn primary" onclick="go('return')">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     RETURN LOCATION
+============================= -->
+<div class="screen" id="screen-return">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="md" style="margin-bottom:4px">Return Location</h1><p class="label">Where to return?</p></div>
+      </div>
+      <div class="space-y-3 mb3" id="return-options">
+        <div class="card cursor" id="ret-home" onclick="selectReturn('home')" style="cursor:pointer">
+          <div class="row">
+            <div class="grad-sq" style="width:40px;height:40px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div class="flex-1"><p class="xs dark semi">Home</p><p class="micro">Return to home location</p></div>
+            <div class="radio" id="radio-home"></div>
+          </div>
+        </div>
+        <div class="card" id="ret-current" onclick="selectReturn('current')" style="cursor:pointer">
+          <div class="row">
+            <div class="grad-sq" style="width:40px;height:40px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/><path d="M4.93 4.93l2.12 2.12m9.9 9.9 2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12"/></svg></div>
+            <div class="flex-1"><p class="xs dark semi">Current</p><p class="micro">Where you started</p></div>
+            <div class="radio" id="radio-current"></div>
+          </div>
+        </div>
+        <div class="card" id="ret-custom" onclick="selectReturn('custom')" style="cursor:pointer">
+          <div class="row">
+            <div class="grad-sq" style="width:40px;height:40px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="flex-1"><p class="xs dark semi">Custom</p><p class="micro">Choose location</p></div>
+            <div class="radio" id="radio-custom"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card mb3 hidden" id="custom-map-card">
+        <div style="width:100%;height:160px;background:linear-gradient(135deg,rgba(96,165,250,.1),rgba(244,114,182,.1));border-radius:.75rem;border:1px solid var(--border-light);display:flex;align-items:center;justify-content:center">
+          <div class="text-center">
+            <svg style="margin:0 auto 8px" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <p class="xs">Tap to select location</p>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary" onclick="confirmReturn()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     SQUAD TRAVEL
+============================= -->
+<div class="screen" id="screen-squad-travel">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="sm">Squad Time Travel</h1><p class="subtitle">Travel with friends</p></div>
+      </div>
+      <div class="card mb3">
+        <div class="row" style="gap:8px">
+          <input class="input" id="squad-invite-input" type="text" placeholder="Enter email or username" style="flex:1">
+          <button class="btn primary sm" onclick="addSquadMember()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg> Add
+          </button>
+        </div>
+      </div>
+      <div class="section-title">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Squad Members (<span id="squad-count">2</span>)
+      </div>
+      <div class="space-y-3 mb3" id="squad-list">
+        <div class="card"><div class="row">
+          <div class="grad-circle" style="width:40px;height:40px;flex-shrink:0"><span style="color:#fff;font-weight:600;font-size:.875rem">SC</span></div>
+          <div class="flex-1"><p class="xs dark semi">Sarah Chen</p><p class="micro">sarah@example.com</p></div>
+          <button onclick="removeSquadMember(this)" style="width:28px;height:28px;border-radius:50%;background:rgba(244,114,182,.2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div></div>
+        <div class="card"><div class="row">
+          <div class="grad-circle" style="width:40px;height:40px;flex-shrink:0"><span style="color:#fff;font-weight:600;font-size:.875rem">ML</span></div>
+          <div class="flex-1"><p class="xs dark semi">Marcus Lee</p><p class="micro">marcus@example.com</p></div>
+          <button onclick="removeSquadMember(this)" style="width:28px;height:28px;border-radius:50%;background:rgba(244,114,182,.2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div></div>
+      </div>
+      <button class="btn primary" onclick="go('summary')">Continue to Mission Summary</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     MISSION SUMMARY
+============================= -->
+<div class="screen" id="screen-summary">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="md" style="margin-bottom:4px">Mission Summary</h1><p class="label">Review your journey</p></div>
+      </div>
+      <div class="card glow mb3">
+        <div class="text-center pb3" style="padding-bottom:20px;margin-bottom:16px;border-bottom:1px solid rgba(147,197,253,.3)">
+          <div class="grad-circle" style="width:64px;height:64px;margin:0 auto 8px;box-shadow:0 8px 24px rgba(244,114,182,.4)"><span style="color:#fff;font-size:1.5rem;font-weight:700">AT</span></div>
+          <p style="font-size:1.1rem;font-weight:700;color:var(--text)">Alex Thompson</p>
+          <p class="micro mt3">Time Traveler</p>
+        </div>
+        <div class="space-y-3">
+          <div class="row" style="padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.05)">
+            <div class="grad-sq" style="width:32px;height:32px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="flex-1"><p class="micro">Destination</p><p class="xs dark semi">Paris, France</p></div>
+          </div>
+          <div class="row" style="padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.05)">
+            <div class="grad-sq" style="width:32px;height:32px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div>
+            <div class="flex-1"><p class="micro">Date</p><p class="xs dark semi">July 14, 1889</p></div>
+          </div>
+          <div class="row" style="padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.05)">
+            <div class="grad-sq" style="width:32px;height:32px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+            <div class="flex-1"><p class="micro">Duration</p><p class="xs dark semi">6 hours</p></div>
+          </div>
+          <div class="row">
+            <div class="grad-sq" style="width:32px;height:32px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+            <div class="flex-1"><p class="micro">Return</p><p class="xs dark semi">Home</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <button class="btn secondary" onclick="go('destination')" style="gap:6px">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
+        </button>
+        <button class="btn primary" onclick="go('launch')">Start Travel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     TRAVEL LAUNCH
+============================= -->
+<div class="screen" id="screen-launch">
+  <div class="bg"></div>
+  <div class="content" style="align-items:center;justify-content:space-between;padding:32px 32px 48px">
+    <div class="absolute" style="top:32px;left:24px"><button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button></div>
+    <div class="text-center" style="margin-top:32px">
+      <h1 class="md" style="margin-bottom:8px">Portal Activation</h1>
+      <p class="subtitle">Preparing for time travel</p>
+    </div>
+    <div class="portal-wrap" style="width:300px;height:300px">
+      <div class="portal-ring"></div><div class="portal-ring"></div><div class="portal-ring"></div>
+      <div class="portal-core"></div>
+      <div class="portal-particle" style="--tx:-80px;--ty:0;top:50%;left:50%;animation-delay:0s"></div>
+      <div class="portal-particle" style="--tx:80px;--ty:0;top:50%;left:50%;animation-delay:1s"></div>
+      <div class="portal-particle" style="--tx:0;--ty:-80px;top:50%;left:50%;animation-delay:.5s"></div>
+      <div class="portal-particle" style="--tx:0;--ty:80px;top:50%;left:50%;animation-delay:1.5s"></div>
+      <div class="portal-particle" style="--tx:57px;--ty:-57px;top:50%;left:50%;animation-delay:.25s"></div>
+      <div class="portal-particle" style="--tx:-57px;--ty:57px;top:50%;left:50%;animation-delay:1.25s"></div>
+    </div>
+    <div class="w-full space-y-4">
+      <div class="card glow">
+        <div class="text-center mb4">
+          <p style="font-size:1.1rem;font-weight:600;color:var(--text)" id="launch-status">Initializing portal...</p>
+        </div>
+        <div class="loading-bar">
+          <div class="loading-fill" id="launch-fill"></div>
+        </div>
+        <p class="text-center xs mt3" id="launch-pct">0%</p>
+      </div>
+      <button class="btn primary btn-pulse" style="font-size:1rem" disabled>Time Travel in Progress...</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     TRAVEL CONFIRMATION
+============================= -->
+<div class="screen" id="screen-confirmation">
+  <div class="bg"></div>
+  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.3">
+    <div class="portal-wrap" style="width:400px;height:400px">
+      <div class="portal-ring"></div><div class="portal-ring"></div><div class="portal-ring"></div>
+      <div class="portal-core"></div>
+    </div>
+  </div>
+  <div class="content" style="align-items:center;justify-content:space-between;padding:32px 32px 48px;position:relative">
+    <div class="absolute" style="top:32px;left:24px"><button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button></div>
+    <div class="grad-circle anim-scale" style="width:112px;height:112px;margin-top:32px;box-shadow:0 0 40px rgba(244,114,182,.4)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+    </div>
+    <div class="text-center space-y-4 anim-fadeup anim-d3">
+      <h1 class="md">Journey Successful!</h1>
+      <p style="font-size:1.25rem;color:var(--text2)">You have successfully arrived in</p>
+      <div class="card glow">
+        <div class="row center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div>
+            <p style="font-size:1.5rem;font-weight:700;color:var(--text)">Paris, France</p>
+            <p style="color:var(--blue);font-size:1.1rem">July 14, 1889 – 10:00 AM</p>
+          </div>
+        </div>
+      </div>
+      <p class="label" style="padding:0 16px">The Eiffel Tower unveiling ceremony is underway. Crowds gather at the World Fair.</p>
+    </div>
+    <div class="w-full space-y-3 anim-fadeup anim-d5">
+      <button class="btn primary" onclick="go('ai')" style="gap:8px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        Explore Location
+      </button>
+      <button class="btn pink-outline" onclick="go('emergency')" style="gap:8px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        Emergency Recall
+      </button>
+      <button class="btn secondary" onclick="go('home')">Return Home</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     AI ASSISTANT
+============================= -->
+<div class="screen" id="screen-ai">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="p6" style="padding-bottom:16px">
+      <div class="row" style="padding-top:32px">
+        <button onclick="goBack()" style="width:36px;height:36px;border-radius:50%;background:var(--white50);backdrop-filter:blur(8px);border:1px solid var(--border-light);display:flex;align-items:center;justify-content:center;cursor:pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="flex-1"><p style="font-size:1.1rem;font-weight:700;color:var(--text)">AI Assistant</p><p class="micro">Ask me anything</p></div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+      </div>
+    </div>
+    <div class="scroll-area px6" id="ai-messages" style="padding-bottom:16px">
+      <div class="messages">
+        <div class="bubble-ai"><p style="font-size:.875rem;line-height:1.6">Hello! I'm your AI assistant. Ask me anything about your time period.</p></div>
+        <div class="bubble-user"><p style="font-size:.875rem;line-height:1.6">What is happening in Paris today?</p></div>
+        <div class="bubble-ai"><p style="font-size:.875rem;line-height:1.6">Today, July 14, 1889, Paris hosts the World's Fair. The Eiffel Tower unveiling is the main event!</p></div>
+      </div>
+    </div>
+    <div class="px6" style="padding-bottom:16px">
+      <div class="card">
+        <div class="row" style="gap:8px">
+          <input class="input" id="ai-input" type="text" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendAI()" style="flex:1;font-size:.875rem">
+          <button onclick="sendAI()" style="width:40px;height:40px;border-radius:.5rem;background:var(--btn-gradient);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(244,114,182,.3)">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1e293b" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     EMERGENCY RETURN
+============================= -->
+<div class="screen" id="screen-emergency">
+  <div class="bg"></div>
+  <div class="content" style="align-items:center;justify-content:space-between;padding:32px 32px 48px">
+    <div class="absolute" style="top:32px;left:24px"><button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button></div>
+    <div class="text-center" style="margin-top:32px">
+      <div class="warn-icon"><svg style="margin:0 auto 24px" xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div>
+      <h1 class="md" style="margin-bottom:8px">Emergency Recall</h1>
+      <p style="font-size:1.25rem;color:var(--text2);padding:0 16px;margin-top:16px">Return to your original timeline?</p>
+    </div>
+    <div class="w-full space-y-5">
+      <div class="card glow">
+        <div class="row center mb3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span class="xs dark semi">Return Location</span>
+        </div>
+        <div class="text-center">
+          <p style="font-size:1.1rem;font-weight:700;color:var(--text)">Ahmedabad, India</p>
+          <p class="xs">12 April 2026 – 3:30 PM</p>
+        </div>
+      </div>
+      <div class="card">
+        <p class="xs dark semi mb3">Warning</p>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+          <li class="xs">• Current mission will be aborted</li>
+          <li class="xs">• All unsaved progress will be lost</li>
+          <li class="xs">• You will return to your home timeline</li>
+        </ul>
+      </div>
+    </div>
+    <div class="w-full space-y-3">
+      <button class="btn danger" onclick="go('completed')">Return Now</button>
+      <button class="btn secondary" onclick="goBack()" style="gap:8px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     JOURNEY COMPLETED
+============================= -->
+<div class="screen" id="screen-completed">
+  <div class="bg"></div>
+  <div class="content" style="align-items:center;justify-content:space-between;padding:32px 32px 48px;padding-top:80px">
+    <div class="grad-circle anim-scale" style="width:112px;height:112px;box-shadow:0 0 40px rgba(244,114,182,.4)">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" class="star-fill"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </div>
+    <div class="text-center space-y-4 anim-fadeup anim-d3">
+      <h1 class="md">Journey Completed!</h1>
+      <p class="label">Successfully completed your time travel</p>
+      <div class="card glow">
+        <div class="row" style="padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid rgba(147,197,253,.4)">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div class="flex-1">
+            <p class="micro">Destination</p>
+            <p class="xs dark semi">Paris, France – 1889</p>
+          </div>
+        </div>
+        <div class="row">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <div class="flex-1">
+            <p class="micro">Duration</p>
+            <p class="xs dark semi">6 hours</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="w-full space-y-3 anim-fadeup anim-d5">
+      <button class="btn primary" onclick="go('memories')" style="gap:8px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+        Save Memories
+      </button>
+      <button class="btn secondary" onclick="go('home')">Return to Dashboard</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     MEMORY CAPSULE
+============================= -->
+<div class="screen" id="screen-memories">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="md" style="margin-bottom:4px">Memory Capsule</h1><p class="label">Save your journey moments</p></div>
+      </div>
+      <div class="card glow mb3">
+        <div class="text-center" style="padding:24px 0">
+          <div class="grad-circle" style="width:64px;height:64px;margin:0 auto 12px"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg></div>
+          <p class="xs dark semi mb3">Upload Photos</p>
+          <p class="micro mb3">Add photos from your journey</p>
+          <input type="file" id="photo-input" accept="image/*" multiple onchange="handlePhotos(event)" style="display:none">
+          <button class="btn primary sm" onclick="document.getElementById('photo-input').click()" style="margin:0 auto;gap:6px">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            Select Photos
+          </button>
+        </div>
+      </div>
+      <div id="photo-gallery" class="hidden mb3">
+        <p class="xs dark semi mb3">Your Memories</p>
+        <div class="grid-3" id="photo-grid"></div>
+      </div>
+      <div class="card mb3">
+        <p class="xs dark semi mb3">Add Notes</p>
+        <textarea class="input" rows="4" placeholder="Write about your experience..."></textarea>
+      </div>
+      <div class="hidden mb3" id="save-success">
+        <div class="card glow" style="border:2px solid rgba(74,222,128,.5)">
+          <div class="row center" style="padding:8px 0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <p class="xs dark semi">Memories Saved Successfully</p>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary" onclick="saveMemories()" style="gap:8px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Memories
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     TRAVEL HISTORY
+============================= -->
+<div class="screen" id="screen-history">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="md" style="margin-bottom:4px">Travel History</h1><p class="label">Your past journeys</p></div>
+      </div>
+      <div class="space-y-3">
+        <div class="card glow">
+          <div class="row mb3">
+            <div class="grad-sq" style="width:40px;height:40px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="flex-1"><p style="font-weight:700;color:var(--text)">Paris – 1889</p><p class="micro">Eiffel Tower Opening</p></div>
+          </div>
+          <div class="row mb3"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="xs">6 hours</span></div>
+          <div class="grid-2">
+            <button class="btn secondary sm" onclick="go('memories')">Memories</button>
+            <button class="btn primary sm" style="gap:4px">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Revisit
+            </button>
+          </div>
+        </div>
+        <div class="card glow">
+          <div class="row mb3">
+            <div class="grad-sq" style="width:40px;height:40px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="flex-1"><p style="font-weight:700;color:var(--text)">Rome – 80 AD</p><p class="micro">Colosseum Opening</p></div>
+          </div>
+          <div class="row mb3"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="xs">1 day</span></div>
+          <div class="grid-2">
+            <button class="btn secondary sm" onclick="go('memories')">Memories</button>
+            <button class="btn primary sm" style="gap:4px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Revisit</button>
+          </div>
+        </div>
+        <div class="card glow">
+          <div class="row mb3">
+            <div class="grad-sq" style="width:40px;height:40px;flex-shrink:0"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+            <div class="flex-1"><p style="font-weight:700;color:var(--text)">New York – 1969</p><p class="micro">Moon Landing</p></div>
+          </div>
+          <div class="row mb3"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span class="xs">6 hours</span></div>
+          <div class="grid-2">
+            <button class="btn secondary sm" onclick="go('memories')">Memories</button>
+            <button class="btn primary sm" style="gap:4px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Revisit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     COLLABORATION
+============================= -->
+<div class="screen" id="screen-collaborate">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="sm">Collaboration</h1><p class="subtitle">Travel with friends</p></div>
+      </div>
+      <button class="btn primary mb3" onclick="go('squad-invite')" style="gap:8px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+        Invite Squad Members
+      </button>
+      <div class="section-title"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Travel Squad</div>
+      <div class="space-y-3 mb4">
+        <div class="card"><div class="row">
+          <div class="grad-circle" style="width:40px;height:40px;flex-shrink:0"><span style="color:#fff;font-weight:600;font-size:.875rem">SC</span></div>
+          <div class="flex-1"><p class="xs dark semi">Sarah Chen</p><div class="row" style="gap:8px;margin-top:2px"><div class="dot online"></div><span class="micro">online</span></div></div>
+        </div></div>
+        <div class="card"><div class="row">
+          <div class="grad-circle" style="width:40px;height:40px;flex-shrink:0"><span style="color:#fff;font-weight:600;font-size:.875rem">ML</span></div>
+          <div class="flex-1"><p class="xs dark semi">Marcus Lee</p><div class="row" style="gap:8px;margin-top:2px"><div class="dot offline"></div><span class="micro">offline</span></div></div>
+        </div></div>
+      </div>
+      <div class="section-title"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Discussion</div>
+      <div class="space-y-3 mb3">
+        <div class="card"><div class="row between mb3"><span class="xs dark semi">Sarah</span><span class="micro">2h</span></div><p class="xs">Excited for this trip!</p></div>
+        <div class="card"><div class="row between mb3"><span class="xs dark semi">Marcus</span><span class="micro">1h</span></div><p class="xs">Meet at Eiffel Tower</p></div>
+      </div>
+      <div class="card">
+        <div class="row" style="gap:8px">
+          <input class="input" type="text" placeholder="Add comment..." style="flex:1;font-size:.875rem">
+          <button style="width:40px;height:40px;border-radius:.5rem;background:var(--btn-gradient);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     SQUAD INVITE
+============================= -->
+<div class="screen" id="screen-squad-invite">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="sm">Invite Travelers</h1><p class="subtitle">Add friends to your squad</p></div>
+      </div>
+      <div class="card mb3">
+        <div class="input-icon">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input class="input" type="text" placeholder="Search friends...">
+        </div>
+      </div>
+      <div class="section-title"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Available Friends</div>
+      <div class="space-y-3 mb4">
+        <div class="card"><div class="row">
+          <div class="grad-circle" style="width:40px;height:40px;flex-shrink:0"><span style="color:#fff;font-weight:600;font-size:.875rem">EW</span></div>
+          <div class="flex-1"><p class="xs dark semi">Emma Wilson</p><div class="row" style="gap:8px;margin-top:2px"><div class="dot online"></div><span class="micro">online</span></div></div>
+          <button class="btn primary xs" style="gap:4px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg> Invite</button>
+        </div></div>
+        <div class="card"><div class="row">
+          <div class="grad-circle" style="width:40px;height:40px;flex-shrink:0"><span style="color:#fff;font-weight:600;font-size:.875rem">JC</span></div>
+          <div class="flex-1"><p class="xs dark semi">James Chen</p><div class="row" style="gap:8px;margin-top:2px"><div class="dot offline"></div><span class="micro">offline</span></div></div>
+          <button class="btn primary xs" style="gap:4px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg> Invite</button>
+        </div></div>
+        <div class="card"><div class="row">
+          <div class="grad-circle" style="width:40px;height:40px;flex-shrink:0"><span style="color:#fff;font-weight:600;font-size:.875rem">SM</span></div>
+          <div class="flex-1"><p class="xs dark semi">Sophia Martinez</p><div class="row" style="gap:8px;margin-top:2px"><div class="dot online"></div><span class="micro">online</span></div></div>
+          <button class="btn primary xs" style="gap:4px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg> Invite</button>
+        </div></div>
+      </div>
+      <p class="xs dark semi mb3">Current Squad</p>
+      <div class="space-y-3 mb4">
+        <div class="card"><div class="row"><div class="grad-circle" style="width:40px;height:40px;flex-shrink:0"><span style="color:#fff;font-weight:600;font-size:.875rem">SC</span></div><div class="flex-1"><p class="xs dark semi">Sarah Chen</p><span class="micro">Leader</span></div></div></div>
+        <div class="card"><div class="row"><div class="grad-circle" style="width:40px;height:40px;flex-shrink:0"><span style="color:#fff;font-weight:600;font-size:.875rem">ML</span></div><div class="flex-1"><p class="xs dark semi">Marcus Lee</p><span class="micro">Member</span></div></div></div>
+      </div>
+      <div class="section-title"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pending Invitations</div>
+      <div class="card mb3">
+        <div class="row">
+          <div class="grad-circle" style="width:40px;height:40px;flex-shrink:0;background:linear-gradient(135deg,var(--lavender),var(--blue))"><span style="color:#fff;font-weight:600;font-size:.875rem">AR</span></div>
+          <div class="flex-1"><p class="xs dark semi">Alex Rivera</p><span class="micro">Sent 2h ago</span></div>
+          <span class="badge-pending">Pending</span>
+        </div>
+      </div>
+      <button class="btn primary" onclick="goBack()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     SETTINGS
+============================= -->
+<div class="screen" id="screen-settings">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="md" style="margin-bottom:4px">Settings</h1><p class="label">Customize your experience</p></div>
+      </div>
+      <div class="space-y-3 mb4">
+        <div class="card" onclick="toggleDarkTheme(this)" style="cursor:pointer">
+          <div class="row">
+            <div class="grad-sq" style="width:40px;height:40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M3 12h1m16 0h1M12 3v1m0 16v1M5.636 5.636l.707.707m11.314 11.314.707.707M5.636 18.364l.707-.707m11.314-11.314.707-.707"/></svg></div>
+            <div class="flex-1"><p class="xs dark semi">Theme</p><p class="micro" id="theme-val">Light Mode</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="toggleNotif(this)">
+          <div class="row">
+            <div class="grad-sq" style="width:40px;height:40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+            <div class="flex-1"><p class="xs dark semi">Notifications</p><p class="micro" id="notif-val">Enabled</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+        <div class="card" onclick="go('advanced')" style="cursor:pointer">
+          <div class="row">
+            <div class="grad-sq" style="width:40px;height:40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div class="flex-1"><p class="xs dark semi">Advanced Settings</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+        <div class="card" onclick="go('help')" style="cursor:pointer">
+          <div class="row">
+            <div class="grad-sq" style="width:40px;height:40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></div>
+            <div class="flex-1"><p class="xs dark semi">Help &amp; Support</p></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <p class="xs dark semi mb3">Notification Preferences</p>
+        <div class="space-y-3">
+          <div class="row between"><span class="xs">Travel Reminders</span><button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button></div>
+          <div class="row between"><span class="xs">Timeline Updates</span><button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button></div>
+          <div class="row between"><span class="xs">Safety Alerts</span><button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     ADVANCED SETTINGS
+============================= -->
+<div class="screen" id="screen-advanced">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div style="padding-top:32px">
+        <button onclick="go('settings')" class="row" style="background:none;border:none;cursor:pointer;color:var(--text2);margin-bottom:16px;gap:8px;font-family:inherit;font-weight:600">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg> Back
+        </button>
+        <h1 class="md" style="margin-bottom:4px">Advanced Settings</h1>
+        <p class="label mb4">System configuration</p>
+      </div>
+      <div class="card glow mb3">
+        <div class="row mb3">
+          <div class="grad-sq" style="width:40px;height:40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <span class="xs dark semi">Squad Time Travel</span>
+        </div>
+        <p class="xs mb3">Create and manage group time travel missions with friends</p>
+        <div class="space-y-3">
+          <button class="btn primary sm w-full" onclick="go('collaborate')" style="width:100%">Create Travel Squad</button>
+          <button class="btn secondary sm w-full" onclick="go('collaborate')" style="width:100%">Manage Squads</button>
+        </div>
+      </div>
+      <div class="card mb3">
+        <div class="row mb3"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span class="xs dark semi">Timeline Correction</span></div>
+        <div class="row between" style="padding:10px;border-radius:.5rem;background:var(--white50)">
+          <span class="xs">Auto-Correction</span>
+          <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button>
+        </div>
+      </div>
+      <div class="card mb3">
+        <div class="row mb3"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg><span class="xs dark semi">Data Backup</span></div>
+        <div class="space-y-3">
+          <div class="row between" style="padding:10px;border-radius:.5rem;background:var(--white50)">
+            <span class="xs">Auto Backup</span>
+            <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"><div class="toggle-thumb"></div></button>
+          </div>
+          <button class="btn primary sm w-full" style="width:100%">Backup Now</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="row mb3"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg><span class="xs dark semi">Danger Zone</span></div>
+        <div class="space-y-3">
+          <button class="btn secondary sm w-full" style="width:100%">Clear Travel Cache</button>
+          <button class="btn sm w-full" style="width:100%;color:#ef4444;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3)">Reset Timeline</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     PROFILE
+============================= -->
+<div class="screen" id="screen-profile">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button class="back-btn" onclick="goBack()"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+        <div class="flex-1"><h1 class="md" style="margin-bottom:4px">Profile</h1><p class="label">Your time travel profile</p></div>
+      </div>
+      <div class="card glow mb3">
+        <div class="text-center">
+          <div class="grad-circle" style="width:80px;height:80px;margin:0 auto 12px;box-shadow:0 8px 24px rgba(244,114,182,.4)"><span style="font-size:1.875rem;font-weight:700;color:#fff">AT</span></div>
+          <h2 style="font-size:1.25rem;font-weight:700;color:var(--text)">Alex Thompson</h2>
+          <p class="xs mt3">Time Traveler #TH-2026-042</p>
+          <button class="btn primary sm" style="margin:12px auto 0;gap:8px">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Profile
+          </button>
+        </div>
+      </div>
+      <div class="grid-3 mb4">
+        <div class="card stat-card"><svg style="margin:0 auto 4px" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><p style="font-size:1.25rem;font-weight:700;color:var(--text)">12</p><p class="micro mt3">Travels</p></div>
+        <div class="card stat-card"><svg style="margin:0 auto 4px" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><p style="font-size:1.25rem;font-weight:700;color:var(--text)">48</p><p class="micro mt3">Hours</p></div>
+        <div class="card stat-card"><svg style="margin:0 auto 4px" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><p style="font-size:1.25rem;font-weight:700;color:var(--text)">8</p><p class="micro mt3">Achievements</p></div>
+      </div>
+      <div class="row mb3">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+        <span class="xs dark semi">Achievements</span>
+      </div>
+      <div class="space-y-3">
+        <div class="card"><div class="row"><div class="grad-sq" style="width:40px;height:40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#ec4899" stroke="var(--pink)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><p class="xs dark semi">First Journey</p></div></div>
+        <div class="card"><div class="row"><div class="grad-sq" style="width:40px;height:40px"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#ec4899" stroke="var(--pink)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><p class="xs dark semi">Time Explorer</p></div></div>
+        <div class="card" style="opacity:.4"><div class="row"><div class="grad-sq" style="width:40px;height:40px;background:rgba(255,255,255,.5)"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><p class="xs dark semi">History Buff</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     HELP SCREEN
+============================= -->
+<div class="screen" id="screen-help">
+  <div class="bg"></div>
+  <div class="content pb20">
+    <div class="scroll-area p6">
+      <div class="header-row mb4">
+        <button onclick="go('settings')" style="width:36px;height:36px;border-radius:50%;background:var(--white60);backdrop-filter:blur(8px);border:1px solid var(--border-light);display:flex;align-items:center;justify-content:center;cursor:pointer">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <div class="flex-1"><h1 class="md" style="margin-bottom:4px">Help &amp; Support</h1><p class="label">Get help with TimeHop</p></div>
+      </div>
+      <div class="space-y-3 mb4" id="help-accordion">
+        <div class="card" style="cursor:pointer" onclick="toggleHelp(this,0)">
+          <div class="row between">
+            <div class="flex-1"><p class="xs dark semi mb3">How Time Travel Works</p><div class="help-content hidden"><p class="xs" style="margin-top:8px">TimeHop uses quantum portal technology to create stable time corridors. Select your destination, set the time period, and our AI ensures safe passage through the timeline.</p></div></div>
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="toggleHelp(this,1)">
+          <div class="row between">
+            <div class="flex-1"><p class="xs dark semi mb3">Selecting Destination</p><div class="help-content hidden"><p class="xs" style="margin-top:8px">Browse popular destinations or search for specific locations. Use the interactive map to pinpoint your exact arrival coordinates.</p></div></div>
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="toggleHelp(this,2)">
+          <div class="row between">
+            <div class="flex-1"><p class="xs dark semi mb3">Safety &amp; Emergency Return</p><div class="help-content hidden"><p class="xs" style="margin-top:8px">Your safety is our priority. Emergency Return is always accessible during travel. Use it to instantly return to your original timeline if needed.</p></div></div>
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="toggleHelp(this,3)">
+          <div class="row between">
+            <div class="flex-1"><p class="xs dark semi mb3">Using Memory Capsule</p><div class="help-content hidden"><p class="xs" style="margin-top:8px">Capture your journey with photos and notes. Select photos from your device gallery, add personal reflections, and save your memories.</p></div></div>
+            <svg class="chevron" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card glow mb3">
+        <div class="row mb3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="xs dark semi">Quick Tips</span>
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+          <li class="row" style="align-items:flex-start;gap:8px"><span style="color:var(--pink);font-weight:700">•</span><span class="xs">Always review travel risk assessment before departure</span></li>
+          <li class="row" style="align-items:flex-start;gap:8px"><span style="color:var(--pink);font-weight:700">•</span><span class="xs">Follow era-specific guidelines for each destination</span></li>
+          <li class="row" style="align-items:flex-start;gap:8px"><span style="color:var(--pink);font-weight:700">•</span><span class="xs">Use AI Assistant for real-time guidance during travel</span></li>
+        </ul>
+      </div>
+      <button class="btn primary">Contact Support</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     ERROR: DESTINATION REQUIRED
+============================= -->
+<div class="screen" id="screen-error-destination">
+  <div class="bg"></div>
+  <div class="content" style="align-items:center;justify-content:center;padding:32px">
+    <div class="text-center space-y-5 anim-scale">
+      <div class="warn-icon">
+        <div style="width:112px;height:112px;border-radius:50%;background:linear-gradient(135deg,rgba(244,114,182,.3),rgba(239,68,68,.3));border:2px solid rgba(244,114,182,.4);display:flex;align-items:center;justify-content:center;margin:0 auto">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        </div>
+      </div>
+      <div class="anim-fadeup anim-d2">
+        <h1 class="md" style="margin-bottom:12px">Destination Required</h1>
+        <p style="font-size:1.25rem;color:var(--text2);padding:0 16px">Please select a destination before proceeding.</p>
+      </div>
+      <div class="anim-fadeup anim-d3">
+        <div class="card" style="max-width:320px;margin:0 auto">
+          <div class="row" style="align-items:flex-start">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <p class="xs">A destination is required to plan your time travel journey.</p>
+          </div>
+        </div>
+      </div>
+      <div class="w-full space-y-3 anim-fadeup anim-d4" style="padding-top:16px">
+        <button class="btn primary" onclick="go('destination')" style="gap:8px">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          Select Destination
+        </button>
+        <button class="btn secondary" onclick="goBack()">Go Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     ERROR: TIME REQUIRED
+============================= -->
+<div class="screen" id="screen-error-time">
+  <div class="bg"></div>
+  <div class="content" style="align-items:center;justify-content:center;padding:32px">
+    <div class="text-center space-y-5 anim-scale">
+      <div class="warn-icon">
+        <div style="width:112px;height:112px;border-radius:50%;background:linear-gradient(135deg,rgba(244,114,182,.3),rgba(239,68,68,.3));border:2px solid rgba(244,114,182,.4);display:flex;align-items:center;justify-content:center;margin:0 auto">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        </div>
+      </div>
+      <div class="anim-fadeup anim-d2">
+        <h1 class="md" style="margin-bottom:12px">Time Selection Required</h1>
+        <p style="font-size:1.25rem;color:var(--text2);padding:0 16px">Please select a valid time to continue.</p>
+      </div>
+      <div class="anim-fadeup anim-d3">
+        <div class="card" style="max-width:320px;margin:0 auto">
+          <div class="row" style="align-items:flex-start">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" style="flex-shrink:0;margin-top:2px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <p class="xs">Time selection is required to identify historical events.</p>
+          </div>
+        </div>
+      </div>
+      <div class="w-full space-y-3 anim-fadeup anim-d4" style="padding-top:16px">
+        <button class="btn primary" onclick="go('time')" style="gap:8px">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Select Time
+        </button>
+        <button class="btn secondary" onclick="goBack()">Go Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================
+     ERROR: RETURN LOCATION REQUIRED
+============================= -->
+<div class="screen" id="screen-error-return">
+  <div class="bg"></div>
+  <div class="content" style="align-items:center;justify-content:center;padding:32px">
+    <div class="text-center space-y-5 anim-scale">
+      <div class="warn-icon">
+        <div style="width:112px;height:112px;border-radius:50%;background:linear-gradient(135deg,rgba(244,114,182,.3),rgba(239,68,68,.3));border:2px solid rgba(244,114,182,.4);display:flex;align-items:center;justify-content:center;margin:0 auto">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        </div>
+      </div>
+      <div class="anim-fadeup anim-d2">
+        <h1 class="md" style="margin-bottom:12px">Return Location Required</h1>
+        <p style="font-size:1.25rem;color:var(--text2);padding:0 16px">Please select a return location before continuing.</p>
+      </div>
+      <div class="anim-fadeup anim-d3">
+        <div class="card" style="max-width:320px;margin:0 auto">
+          <div class="row" style="align-items:flex-start">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <p class="xs">A return location is required to safely complete your time travel journey.</p>
+          </div>
+        </div>
+      </div>
+      <div class="w-full space-y-3 anim-fadeup anim-d4" style="padding-top:16px">
+        <button class="btn primary" onclick="go('return')" style="gap:8px">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          Select Return Location
+        </button>
+        <button class="btn secondary" onclick="go('return')">Go Back</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #app -->
+
+<script>
+// ===== ROUTING =====
+let history_stack = [];
+let currentScreen = 'splash';
+
+const navScreens = ['home','best-time','destination','time','duration','radar','era-guide','risk','return','squad-travel','summary','launch','confirmation','ai','emergency','completed','memories','history','collaborate','squad-invite','settings','advanced','profile','help'];
+const bottomNavScreens = ['home','best-time','destination','time','duration','radar','era-guide','risk','return','squad-travel','summary','ai','history','collaborate','squad-invite','settings','advanced','profile','help','memories'];
+const navMap = {
+  'home':'nav-home','best-time':'nav-explore','history':'nav-history','ai':'nav-ai','profile':'nav-profile'
+};
+
+function go(name) {
+  history_stack.push(currentScreen);
+  showScreen(name);
+}
+
+function goBack() {
+  if (history_stack.length > 0) {
+    const prev = history_stack.pop();
+    showScreen(prev);
+  }
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if (el) { el.classList.add('active'); currentScreen = name; }
+
+  // bottom nav
+  const nav = document.getElementById('bottom-nav');
+  if (bottomNavScreens.includes(name)) {
+    nav.classList.add('show');
+  } else {
+    nav.classList.remove('show');
+  }
+
+  // highlight active nav
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (navMap[name]) {
+    const nb = document.getElementById(navMap[name]);
+    if (nb) nb.classList.add('active');
+  }
+
+  // screen-specific init
+  if (name === 'launch') startLaunch();
+  if (name === 'destination') initMap();
+  updateTimeDisplay();
+}
+
+// ===== SPLASH TIMER =====
+setTimeout(() => go('begin'), 3000);
+
+// ===== LOGIN =====
+let pwVisible = false;
+function togglePw() {
+  pwVisible = !pwVisible;
+  const inp = document.getElementById('login-pw');
+  inp.type = pwVisible ? 'text' : 'password';
+}
+
+function validatePw(pw) {
+  return {
+    len: pw.length >= 8,
+    upper: /[A-Z]/.test(pw),
+    num: /[0-9]/.test(pw),
+    special: /[!@#$%^&*]/.test(pw)
+  };
+}
+
+function checkLogin() {
+  const email = document.getElementById('login-email').value;
+  const pw = document.getElementById('login-pw').value;
+  const v = validatePw(pw);
+  document.getElementById('req-len').className = 'xs req' + (v.len ? ' met' : '');
+  document.getElementById('req-upper').className = 'xs req' + (v.upper ? ' met' : '');
+  document.getElementById('req-num').className = 'xs req' + (v.num ? ' met' : '');
+  document.getElementById('req-special').className = 'xs req' + (v.special ? ' met' : '');
+  const valid = v.len && v.upper && v.num && v.special && email;
+  document.getElementById('login-btn').disabled = !valid;
+}
+
+function doLogin() {
+  go('home');
+}
+
+// ===== DESTINATION MAP =====
+const locationData = {
+  popular: [
+    {name:'Paris, France', year:1889, x:48, y:32},
+    {name:'Rome, Italy', year:80, x:51, y:45},
+    {name:'New York, USA', year:1969, x:28, y:38},
+  ],
+  historical: [
+    {name:'Athens, Greece', year:500, x:56, y:48},
+    {name:'London, UK', year:1666, x:45, y:28},
+  ],
+  favorites: [
+    {name:'Paris, France', year:1889, x:48, y:32},
+  ]
+};
+let selectedDest = null;
+let currentFilter = 'popular';
+
+function initMap() {
+  // lines
+  const lines = document.getElementById('map-grid-lines');
+  if (lines && !lines.children.length) {
+    for (let i=0;i<48;i++) { const d=document.createElement('div');d.className='map-cell';lines.appendChild(d); }
+  }
+  renderPins();
+}
+
+function renderPins() {
+  const container = document.getElementById('map-pins');
+  if (!container) return;
+  container.innerHTML = '';
+  locationData[currentFilter].forEach(loc => {
+    const pin = document.createElement('div');
+    pin.className = 'map-pin ' + (selectedDest === loc.name ? 'selected' : 'unselected');
+    pin.style.left = loc.x+'%';
+    pin.style.top = loc.y+'%';
+    pin.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>`;
+    pin.onclick = () => selectDest(loc.name);
+    container.appendChild(pin);
+  });
+}
+
+function selectDest(name) {
+  selectedDest = name;
+  renderPins();
+  const card = document.getElementById('selected-dest-card');
+  const nameEl = document.getElementById('selected-dest-name');
+  card.classList.remove('hidden');
+  nameEl.textContent = name;
+}
+
+function setFilter(f) {
+  currentFilter = f;
+  ['popular','historical','favorites'].forEach(ff => {
+    const btn = document.getElementById('filter-'+ff);
+    if (btn) {
+      btn.style.background = ff===f ? 'var(--btn-gradient)' : 'var(--white50)';
+      btn.style.color = ff===f ? '#fff' : 'var(--text)';
+      btn.style.border = ff===f ? 'none' : '1px solid var(--border-light)';
+    }
+  });
+  renderPins();
+}
+
+function confirmDest() {
+  if (!selectedDest) {
+    go('error-destination');
+  } else {
+    go('time');
+  }
+}
+
+// ===== TIME SELECTION =====
+let timeInteracted = false;
+function markTimeInteracted() { timeInteracted = true; updateTimeDisplay(); }
+function updateTimeDirection() {
+  timeInteracted = true;
+  const year = parseInt(document.getElementById('t-year')?.value || '1889');
+  const dir = document.getElementById('time-direction');
+  if (dir) dir.textContent = year < 2026 ? '← Past Travel' : '→ Future Travel';
+  updateTimeDisplay();
+}
+function updateTimeDisplay() {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const y = document.getElementById('t-year')?.value || '1889';
+  const m = parseInt(document.getElementById('t-month')?.value || '7') - 1;
+  const d = document.getElementById('t-day')?.value || '14';
+  const h = String(document.getElementById('t-hour')?.value || '10').padStart(2,'0');
+  const min = String(document.getElementById('t-min')?.value || '0').padStart(2,'0');
+  const el = document.getElementById('time-display');
+  if (el) el.textContent = `${months[m]} ${d}, ${y} – ${h}:${min}`;
+}
+
+function confirmTime() {
+  if (!timeInteracted) {
+    go('error-time');
+  } else {
+    go('duration');
+  }
+}
+
+// ===== DURATION =====
+let selectedDuration = '6 hours';
+function setDuration(d) {
+  selectedDuration = d;
+  document.getElementById('dur-display').textContent = d;
+  document.getElementById('dur-custom-val').value = '';
+  ['1 hour','6 hours','1 day'].forEach(dd => {
+    const key = dd.replace(' ','').replace(' ','');
+    const id = 'dur-'+key.replace('hour','1h').replace('hours','6h').replace('day','1d');
+    const btn = document.querySelector(`[id^="dur-"]`);
+  });
+  // update button styles
+  ['dur-1h','dur-6h','dur-1d'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const map = {'dur-1h':'1 hour','dur-6h':'6 hours','dur-1d':'1 day'};
+    const isSelected = map[id] === d;
+    el.className = 'btn sm' + (isSelected ? ' primary' : ' secondary');
+  });
+}
+function updateCustomDuration() {
+  const val = document.getElementById('dur-custom-val').value;
+  const unit = document.getElementById('dur-custom-unit').value.toLowerCase();
+  if (val) {
+    selectedDuration = `${val} ${unit}`;
+    document.getElementById('dur-display').textContent = selectedDuration;
+    ['dur-1h','dur-6h','dur-1d'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.className = 'btn sm secondary';
+    });
+  }
+}
+
+// ===== LAUNCH =====
+let launchInterval = null;
+function startLaunch() {
+  if (launchInterval) clearInterval(launchInterval);
+  let pct = 0;
+  const statuses = ['Initializing portal...','Calibrating coordinates...','Stabilizing timeline...','Opening corridor...','Portal activated!'];
+  let step = 0;
+  document.getElementById('launch-fill').style.width = '0%';
+  document.getElementById('launch-pct').textContent = '0%';
+  document.getElementById('launch-status').textContent = statuses[0];
+  launchInterval = setInterval(() => {
+    pct += 20;
+    document.getElementById('launch-fill').style.width = pct + '%';
+    document.getElementById('launch-pct').textContent = pct + '%';
+    step++;
+    if (step < statuses.length) document.getElementById('launch-status').textContent = statuses[step];
+    if (pct >= 100) {
+      clearInterval(launchInterval);
+      setTimeout(() => go('confirmation'), 1000);
+    }
+  }, 1000);
+}
+
+// ===== RETURN LOCATION =====
+let selectedReturn = null;
+function selectReturn(opt) {
+  selectedReturn = opt;
+  ['home','current','custom'].forEach(o => {
+    const card = document.getElementById('ret-'+o);
+    const radio = document.getElementById('radio-'+o);
+    if (opt === o) {
+      card.classList.add('ring-pink');
+      radio.classList.add('checked');
+      radio.innerHTML = '<div class="radio-dot"></div>';
+    } else {
+      card.classList.remove('ring-pink');
+      radio.classList.remove('checked');
+      radio.innerHTML = '';
+    }
+  });
+  const customMap = document.getElementById('custom-map-card');
+  if (opt === 'custom') customMap.classList.remove('hidden');
+  else customMap.classList.add('hidden');
+}
+function confirmReturn() {
+  if (!selectedReturn) go('error-return');
+  else go('squad-travel');
+}
+
+// ===== AI ASSISTANT =====
+function sendAI() {
+  const inp = document.getElementById('ai-input');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  const container = document.getElementById('ai-messages');
+  const msgs = container.querySelector('.messages');
+  const userBubble = document.createElement('div');
+  userBubble.className = 'bubble-user';
+  userBubble.innerHTML = `<p style="font-size:.875rem;line-height:1.6">${msg}</p>`;
+  msgs.appendChild(userBubble);
+  inp.value = '';
+  container.scrollTop = container.scrollHeight;
+  setTimeout(() => {
+    const aiBubble = document.createElement('div');
+    aiBubble.className = 'bubble-ai';
+    aiBubble.innerHTML = `<p style="font-size:.875rem;line-height:1.6">Great question! Let me provide context about that for you...</p>`;
+    msgs.appendChild(aiBubble);
+    container.scrollTop = container.scrollHeight;
+  }, 1000);
+}
+
+// ===== SQUAD TRAVEL =====
+function addSquadMember() {
+  const inp = document.getElementById('squad-invite-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  const list = document.getElementById('squad-list');
+  const initials = val.substring(0,2).toUpperCase();
+  const item = document.createElement('div');
+  item.className = 'card';
+  item.innerHTML = `<div class="row">
+    <div class="grad-circle" style="width:40px;height:40px;flex-shrink:0"><span style="color:#fff;font-weight:600;font-size:.875rem">${initials}</span></div>
+    <div class="flex-1"><p class="xs dark semi">${val}</p><p class="micro">${val}</p></div>
+    <button onclick="removeSquadMember(this)" style="width:28px;height:28px;border-radius:50%;background:rgba(244,114,182,.2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--pink)" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>`;
+  list.appendChild(item);
+  inp.value = '';
+  updateSquadCount();
+}
+function removeSquadMember(btn) {
+  btn.closest('.card').remove();
+  updateSquadCount();
+}
+function updateSquadCount() {
+  const count = document.getElementById('squad-list')?.children.length || 0;
+  const el = document.getElementById('squad-count');
+  if (el) el.textContent = count;
+}
+
+// ===== MEMORY PHOTOS =====
+function handlePhotos(e) {
+  const files = Array.from(e.target.files).slice(0,6);
+  const gallery = document.getElementById('photo-gallery');
+  const grid = document.getElementById('photo-grid');
+  grid.innerHTML = '';
+  files.forEach(f => {
+    const url = URL.createObjectURL(f);
+    const div = document.createElement('div');
+    div.className = 'photo-card';
+    div.innerHTML = `<img src="${url}" alt="memory">`;
+    grid.appendChild(div);
+  });
+  if (files.length) gallery.classList.remove('hidden');
+}
+function saveMemories() {
+  const s = document.getElementById('save-success');
+  s.classList.remove('hidden');
+  setTimeout(() => s.classList.add('hidden'), 3000);
+}
+
+// ===== SETTINGS =====
+function toggleDarkTheme(el) {
+  const val = document.getElementById('theme-val');
+  val.textContent = val.textContent === 'Light Mode' ? 'Dark Mode' : 'Light Mode';
+}
+function toggleNotif(el) {
+  const val = document.getElementById('notif-val');
+  val.textContent = val.textContent === 'Enabled' ? 'Disabled' : 'Enabled';
+}
+
+// ===== HELP ACCORDION =====
+function toggleHelp(card, idx) {
+  const content = card.querySelector('.help-content');
+  const chevron = card.querySelector('.chevron');
+  const isOpen = !content.classList.contains('hidden');
+  // close all
+  document.querySelectorAll('#help-accordion .help-content').forEach(c => c.classList.add('hidden'));
+  document.querySelectorAll('#help-accordion .chevron').forEach(c => c.style.transform = '');
+  if (!isOpen) {
+    content.classList.remove('hidden');
+    chevron.style.transform = 'rotate(180deg)';
+  }
+}
+</script>
+</body>
+</html>
